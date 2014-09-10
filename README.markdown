@@ -1,68 +1,26 @@
 # memolist.vim
 
-This is a vimscript for create and manage memo.  
-memolist.vim is inspired by [jekyll.vim](https://github.com/csexton/jekyll.vim).
+This is memolist.vim forked from [glidenote/memolist.vim](https://github.com/glidenote/memolist.vim).
+There are options that I have added.
+Please set the vimrc in any way you want.
 
-## Setup
-
-Set the path to your memo directory in your .vimrc.(default directory `$HOME/memo`)
-
-```
-let g:memolist_path = "path/to/dir"
-```
-
-You may also want to add a few mappings to stream line the behavior:
-
-```
-nnoremap <Leader>mn  :MemoNew<CR>
-nnoremap <Leader>ml  :MemoList<CR>
-nnoremap <Leader>mg  :MemoGrep<CR>
-```
-
-## Commands
-
-Create New Memo:
-
-```
-:MemoNew
-```
-
-Show Memo List:
-
-```
-:MemoList
-```
-
-Grep Memo Directory:
-
-```
-:MemoGrep
-```
-
-## Options
+## Add Options
 
 ```vim
-" suffix type (default markdown)
-let g:memolist_memo_suffix = "markdown"
-let g:memolist_memo_suffix = "txt"
+" It's memolist allocate by filename extension and create a folder automatically. The default is 0.
+let g:memolist_memo_directory_allocation = 1
 
-" date format (default %Y-%m-%d %H:%M)
-let g:memolist_memo_date = "%Y-%m-%d %H:%M"
-let g:memolist_memo_date = "epoch"
-let g:memolist_memo_date = "%D %T"
+" use directory of memo's allocation. The default setting is 'txt' and 'markdown'.
+let g:memolist_memo_directory = {
+  \ 'txt':'txt',
+  \ 'md':'markdown',
+  \ 'markdown':'markdown',
+  \}
+```
 
-" tags prompt (default 0)
-let g:memolist_prompt_tags = 1
+## Recommended settings
 
-" categories prompt (default 0)
-let g:memolist_prompt_categories = 1
-
-" use qfixgrep (default 0)
-let g:memolist_qfixgrep = 1
-
-" use vimfler (default 0)
-let g:memolist_vimfiler = 1
-
+```vim
 " remove filename prefix (default 0)
 let g:memolist_filename_prefix_none = 1
 
@@ -70,55 +28,36 @@ let g:memolist_filename_prefix_none = 1
 let g:memolist_unite = 1
 
 " use arbitrary unite source (default is 'file')
-let g:memolist_unite_source = "file_rec"
+let g:memolist_unite_source = 'file_rec'
 
 " use arbitrary unite option (default is empty)
-let g:memolist_unite_option = "-auto-preview -start-insert"
+let g:memolist_unite_option = '-no-start-insert'
+
+let g:memolist_memo_directory_allocation = 1
+
+let g:memolist_memo_directory = {
+  \ 'txt':'txt',
+  \ 'md':'markdown',
+  \ 'markdown':'markdown',
+  \ 'c':'C',
+  \ 'cpp':'Cpp',
+  \ 'm':'ObjectiveC',
+  \ 'swift':'Swift',
+  \ 'coffee':'CoffeeScript',
+  \ 'java':'Java',
+  \ 'js':'JavaScript',
+  \ 'py':'Python',
+  \ 'rb':'Ruby',
+  \ 'go':'Go',
+  \ 'vim':'Vim',
+  \ 'html':'HTML',
+  \ 'htm':'HTML',
+  \ 'php':'PHP',
+  \ 'pl':'Perl',
+  \ 'css':'CSS',
+  \ 'sql':'SQL',
+  \ 'sh':'Shell',
+  \ 'xml':'XML',
+  \ 'yaml':'YAML',
+  \}
 ```
-
-## memolist.vim with unite.vim
-
-![](http://blog.glidenote.com/images/2013/09/memolist_with_unite0.png)
-
-## Custom template
-
-you can use other format and custom template.
-(default memo format is `markdown`.)
-
-if you use custom template file(`~/memotemplates/rdoc.txt`).  
-add the following lines to your `.vimrc`
-
-```
-let g:memolist_memo_suffix = "rdoc"
-let g:memolist_template_dir_path = "~/memotemplates"
-```
-
-## Install
-
-### Manually
-
-Put all files under $VIM.
-
-### Vundle (https://github.com/gmarik/vundle)
-
-Add the following configuration to your `.vimrc`.
-
-```
-Bundle 'glidenote/memolist.vim'
-```
-
-Install with `:BundleInstall`.
-
-### NeoBundle (https://github.com/Shougo/neobundle.vim)
-
-Add the following configuration to your `.vimrc`.
-
-```
-NeoBundle 'glidenote/memolist.vim'
-```
-
-Install with `:NeoBundleInstall`.
-
-## License
-
-Lcense: Same terms as Vim itself (see [license](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license))

@@ -1,6 +1,7 @@
 " autoload/memolist.vim
-" Author:  Akira Maeda <glidenote@gmail.com>
-" Version: 0.1.0
+" forked from Akira Maeda <glidenote@gmail.com>
+" Author:  Akira Maeda <glidenote@gmail.com> Hiroshi Murata <agend21@icloud.com>
+" Version: 0.1.?
 " Install this file as autoload/memolist.vim.  This file is sourced manually by
 " plugin/memolist.vim.  It is in autoload directory to allow for future usage of
 " Vim 7's autoload feature.
@@ -56,6 +57,31 @@ endif
 if !exists('g:memolist_unite_option')
   let g:memolist_unite_option = ""
 endif
+
+if !exists('g:memolist_memo_directory_allocation')
+  let g:memolist_memo_directory_allocation = 0
+endif
+
+if !exists('g:memolist_memo_directory')
+  let g:memolist_memo_directory = {
+  \ 'txt':'txt',
+  \ 'md':'markdown',
+  \ 'markdown':'markdown',
+ \}
+endif
+
+function! s:extension(file_name)
+  return fnamemodify(a:file_name, ":e")
+endfunction
+
+function! s:check_extension(file_name)
+  return has_key(g:memolist_memo_directory, s:extension(a:file_name))
+endfunction
+
+function! s:extension_directory_name(file_name)
+  return get(g:memolist_memo_directory,s:extension(a:file_name))
+endfunction
+
 
 function! s:esctitle(str)
   let str = a:str
@@ -147,8 +173,19 @@ function! memolist#new(title)
     let file_name = file_name . "." . g:memolist_memo_suffix
   endif
 
-  echo "Making that memo " . file_name
-  exe (&l:modified ? "sp" : "e") s:escarg(g:memolist_path . "/" . file_name)
+  let s:memolist_extention_path = expand(g:memolist_path . "/" . s:extension_directory_name(file_name), ":p")
+  echo "Making that memo: " . file_name
+
+  if g:memolist_memo_directory_allocation == 0 || s:check_extension(file_name) == 0
+    exe (&l:modified ? "sp" : "e") s:escarg(g:memolist_path . "/" . file_name)
+  elseif s:check_extension(file_name) == 1 && !isdirectory(s:memolist_extention_path)
+    call mkdir(s:memolist_extention_path, 'p')
+    exe (&l:modified ? "sp" : "e") s:escarg(s:memolist_extention_path . "/" . file_name)
+  elseif s:check_extension(file_name) == 1
+    exe (&l:modified ? "sp" : "e") s:escarg(s:memolist_extention_path . "/" . file_name)
+  else
+    error("For some reason can't make this memo.")
+  endif
 
   " memo template
   let template = s:default_template
