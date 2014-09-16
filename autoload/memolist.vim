@@ -62,12 +62,20 @@ if !exists('g:memolist_memo_directory_allocation')
   let g:memolist_memo_directory_allocation = 0
 endif
 
+if !exists('g:memolist_memo_TODO')
+  let g:memolist_memo_TODO = 0
+endif
+
+if !exists('g:memolist_memo_TODO_directory')
+  let g:memolist_memo_TODO_directory = "TODO"
+endif
+
 if !exists('g:memolist_memo_directory')
   let g:memolist_memo_directory = {
   \ 'txt':'txt',
   \ 'md':'markdown',
   \ 'markdown':'markdown',
- \}
+  \}
 endif
 
 function! s:extension(file_name)
@@ -79,9 +87,25 @@ function! s:check_extension(file_name)
 endfunction
 
 function! s:extension_directory_name(file_name)
-  return get(g:memolist_memo_directory,s:extension(a:file_name))
+  return get(g:memolist_memo_directory, s:extension(a:file_name))
 endfunction
 
+function! s:add_default_suffix(file_name, title)
+  if stridx(a:title, '.') == -1
+    let s:file_name = a:file_name . "." . g:memolist_memo_suffix
+  else
+    let s:file_name = a:file_name
+  endif
+  return s:file_name
+endfunction
+
+function! s:filename_prefix(title)
+  call s:add_default_suffix(strftime("%Y-%m-%d-") . s:esctitle(a:title), a:title)
+endfunction
+
+function! s:filename_prefix_none(title)
+  call s:add_default_suffix(s:esctitle(a:title), a:title)
+endfunction
 
 function! s:esctitle(str)
   let str = a:str
@@ -101,6 +125,53 @@ if !isdirectory(g:memolist_path)
   call mkdir(g:memolist_path, 'p')
 endif
 
+let s:memolist_memo_TODO_path = expand(g:memolist_path . "/" . g:memolist_memo_TODO_directory, ':p')
+
+function! s:memolist_make(file)
+  exe (&l:modified ? "sp" : "e") s:escarg(a:file)
+endfunction
+
+function! s:memolist_default_case()
+  return g:memolist_memo_directory_allocation == 0 && g:memolist_memo_TODO == 0
+endfunction
+
+function! s:memolist_TODO_case()
+  return g:memolist_memo_TODO == 1
+endfunction
+
+function! s:memolist_extension_case()
+  return g:memolist_memo_directory_allocation == 1
+endfunction
+
+function! s:memolist_default() abort
+  call s:memolist_make(g:memolist_path . "/" . s:file_name)
+endfunction
+
+function! s:memolist_TODO(title) abort
+  if stridx(a:title, '.') == -1
+    if g:memolist_filename_prefix_none == 1|call s:filename_prefix(a:title)|endif
+    if !isdirectory(s:memolist_memo_TODO_path)|call mkdir(s:memolist_memo_TODO_path, 'p')|endif
+    call s:memolist_make(s:memolist_memo_TODO_path . "/" . s:file_name)
+    echo 'use of ' . g:memolist_memo_TODO_directory . ' folder.'
+  elseif s:memolist_extension_case() != 1
+    call s:memolist_default()
+  else
+    call s:memolist_extension(a:title)
+  endif
+endfunction
+
+function! s:memolist_extension(title) abort
+  if s:check_extension(s:file_name) == 0 && stridx(a:title, '.') == -1
+    call s:memolist_default()
+  elseif s:check_extension(s:file_name) == 1
+    if !isdirectory(s:memolist_extension_path)|call mkdir(s:memolist_extension_path, 'p')|endif
+    call s:memolist_make(s:memolist_extension_path . "/" . s:file_name)
+    echo 'use of ' . s:extension_directory_name(s:file_name) . ' folder.'
+  else
+    call s:memolist_default()
+  endif
+endfunction
+
 "------------------------
 " function
 "------------------------
@@ -111,6 +182,16 @@ function! memolist#list()
     exe "Unite" g:memolist_unite_source.':'.s:escarg(g:memolist_path) g:memolist_unite_option
   else
     exe "e" s:escarg(g:memolist_path)
+  endif
+endfunction
+
+function! memolist#listTODO()
+  if get(g:, 'memolist_vimfiler', 0) != 0
+    exe "VimFiler" g:memolist_vimfiler_option s:escarg(s:memolist_memo_TODO_path)
+  elseif get(g:, 'memolist_unite', 0) != 0
+    exe "Unite" g:memolist_unite_source.':'.s:escarg(s:memolist_memo_TODO_path) g:memolist_unite_option
+  else
+    exe "e" s:escarg(s:memolist_memo_TODO_path)
   endif
 endfunction
 
@@ -165,27 +246,28 @@ function! memolist#new(title)
   endif
 
   if get(g:, 'memolist_filename_prefix_none', 0) != 0
-    let file_name = s:esctitle(items['title'])
+    call s:filename_prefix_none(items['title'])
   else
-    let file_name = strftime("%Y-%m-%d-") . s:esctitle(items['title'])
-  endif
-  if stridx(items['title'], '.') == -1
-    let file_name = file_name . "." . g:memolist_memo_suffix
+    call s:filename_prefix(items['title'])
   endif
 
-  let s:memolist_extention_path = expand(g:memolist_path . "/" . s:extension_directory_name(file_name), ":p")
-  echo "Making that memo: " . file_name
+  let s:memolist_extension_path = expand(g:memolist_path . "/" . s:extension_directory_name(s:file_name), ":p")
 
-  if g:memolist_memo_directory_allocation == 0 || s:check_extension(file_name) == 0
-    exe (&l:modified ? "sp" : "e") s:escarg(g:memolist_path . "/" . file_name)
-  elseif s:check_extension(file_name) == 1 && !isdirectory(s:memolist_extention_path)
-    call mkdir(s:memolist_extention_path, 'p')
-    exe (&l:modified ? "sp" : "e") s:escarg(s:memolist_extention_path . "/" . file_name)
-  elseif s:check_extension(file_name) == 1
-    exe (&l:modified ? "sp" : "e") s:escarg(s:memolist_extention_path . "/" . file_name)
-  else
-    error("For some reason can't make this memo.")
-  endif
+  try
+    if s:memolist_default_case()
+      call s:memolist_default()
+    elseif s:memolist_TODO_case()
+      call s:memolist_TODO(items['title'])
+    elseif s:memolist_extension_case()
+      call s:memolist_extension(items['title'])
+    else
+      s:error("For some reason can't make this memo.")
+    endif
+  catch
+    redraw | echohl ErrorMsg | echo v:exception | echohl None
+  finally
+    echo "Making that memo: " . s:file_name
+  endtry
 
   " memo template
   let template = s:default_template

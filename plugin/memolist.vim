@@ -21,6 +21,7 @@ if !exists('g:memolist_path')
 endif
 
 command! -nargs=0 MemoList :call memolist#list()
+command! -nargs=0 MemoListTODO :call memolist#listTODO()
 command! -nargs=? MemoGrep :call memolist#grep(<q-args>)
 command! -nargs=? MemoNew :call memolist#new(<q-args>)
 
